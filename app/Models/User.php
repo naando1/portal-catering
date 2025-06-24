@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -26,6 +24,7 @@ class User extends Authenticatable
         'gender',
         'height',
         'weight',
+        'activity_level',
     ];
 
     protected $hidden = [
@@ -36,8 +35,12 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'birthdate' => 'date',
+        'height' => 'decimal:2',
+        'weight' => 'decimal:2',
     ];
 
+    // Existing relationships
     public function role()
     {
         return $this->belongsTo(Role::class);
@@ -73,7 +76,11 @@ class User extends Authenticatable
         return $this->hasOne(DietPreference::class);
     }
 
-    // Method helper untuk informasi kesehatan
+    public function bodyMetrics()
+    {
+        return $this->hasOne(UserBodyMetrics::class);
+    }
+
     public function getAge()
     {
         return $this->birthdate ? Carbon::parse($this->birthdate)->age : null;
@@ -96,13 +103,13 @@ class User extends Authenticatable
         }
 
         if ($bmi < 18.5) {
-            return 'Underweight';
+            return 'Kurus (Underweight)';
         } elseif ($bmi < 25) {
             return 'Normal';
         } elseif ($bmi < 30) {
-            return 'Overweight';
+            return 'Kelebihan Berat Badan (Overweight)';
         } else {
-            return 'Obese';
+            return 'Obesitas';
         }
     }
 
@@ -121,10 +128,132 @@ class User extends Authenticatable
         return $this->role->name === 'customer';
     }
 
-    // Method untuk cek kelengkapan profil kesehatan
     public function hasCompleteHealthProfile()
     {
-        return $this->healthProfile && $this->birthdate && $this->gender && $this->height && $this->weight;
+        return $this->healthProfile && 
+               $this->birthdate && 
+               $this->gender && 
+               $this->height && 
+               $this->weight &&
+               $this->activity_level;
+    }
+
+    /**
+     * Get BMR (Basal Metabolic Rate) menggunakan rumus Mifflin-St Jeor
+     */
+    public function getBmr()
+    {
+        if (!$this->weight || !$this->height || !$this->birthdate || !$this->gender) {
+            return null;
+        }
+
+        $age = $this->getAge();
+        
+        if ($this->gender === 'male' || $this->gender === 'pria') {
+            return (10 * $this->weight) + (6.25 * $this->height) - (5 * $age) + 5;
+        } else {
+            return (10 * $this->weight) + (6.25 * $this->height) - (5 * $age) - 161;
+        }
+    }
+
+    /**
+     * Get TDEE (Total Daily Energy Expenditure)
+     */
+    public function getTdee()
+    {
+        $bmr = $this->getBmr();
+        if (!$bmr || !$this->activity_level) {
+            return null;
+        }
+
+        $activityFactors = [
+            'sedentari' => 1.2,
+            'ringan' => 1.375,
+            'sedang' => 1.55,
+            'berat' => 1.725,
+            'sangat_berat' => 1.9,
+        ];
+
+        $factor = $activityFactors[$this->activity_level] ?? 1.2;
+        return round($bmr * $factor);
+    }
+
+    /**
+     * Get target kalori berdasarkan tujuan diet
+     */
+    public function getTargetCalories()
+    {
+        $tdee = $this->getTdee();
+        if (!$tdee || !$this->dietPreference) {
+            return null;
+        }
+
+        $dietGoal = $this->dietPreference->diet_goal ?? 'jaga_bb';
+        $percentage = $this->dietPreference->deficit_surplus_percentage ?? 15;
+
+        switch ($dietGoal) {
+            case 'turun_bb':
+                return round($tdee * (1 - ($percentage / 100)));
+            case 'naik_bb':
+                return round($tdee * (1 + ($percentage / 100)));
+            case 'jaga_bb':
+            default:
+                return $tdee;
+        }
+    }
+
+    /**
+     * Get activity level dalam bahasa Indonesia
+     */
+    public function getActivityLevelLabel()
+    {
+        $labels = [
+            'sedentari' => 'Sedentari (tidak aktif)',
+            'ringan' => 'Ringan (olahraga ringan 1-3 hari/minggu)',
+            'sedang' => 'Sedang (olahraga sedang 3-5 hari/minggu)',
+            'berat' => 'Berat (olahraga berat 6-7 hari/minggu)',
+            'sangat_berat' => 'Sangat Berat (pekerjaan fisik + olahraga)',
+        ];
+
+        return $labels[$this->activity_level] ?? 'Tidak ditentukan';
+    }
+
+    /**
+     * Get diet goal dalam bahasa Indonesia
+     */
+    public function getDietGoalLabel()
+    {
+        if (!$this->dietPreference) {
+            return 'Tidak ditentukan';
+        }
+
+        $labels = [
+            'turun_bb' => 'Turun Berat Badan',
+            'naik_bb' => 'Naik Berat Badan',
+            'jaga_bb' => 'Jaga Berat Badan',
+        ];
+
+        return $labels[$this->dietPreference->diet_goal] ?? 'Tidak ditentukan';
+    }
+
+    /**
+     * Check if user has specific health condition
+     */
+    public function hasHealthCondition($condition)
+    {
+        if (!$this->healthProfile) {
+            return false;
+        }
+
+        $conditionMap = [
+            'diabetes' => 'has_diabetes',
+            'hipertensi' => 'has_hypertension',
+            'kolesterol' => 'has_cholesterol',
+            'jantung' => 'has_heart_disease',
+            'ambeien' => 'has_hemorrhoids',
+        ];
+
+        $field = $conditionMap[$condition] ?? null;
+        return $field ? $this->healthProfile->$field : false;
     }
 }
-

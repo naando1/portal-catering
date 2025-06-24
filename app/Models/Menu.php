@@ -9,45 +9,56 @@ class Menu extends Model
 {
     use HasFactory;
 
-    // Tambahkan field baru ke fillable
     protected $fillable = [
-        'catering_partner_id',
-        'category_id',
         'name',
         'description',
         'price',
         'image',
-        'is_available',
         'calories',
-        'carbohydrates',
         'proteins',
+        'carbs',
         'fats',
         'sugars',
         'sodium',
+        'fiber',
+        'cooking_method',
+        'carbohydrate_type',
+        'is_available',
         'is_diet_menu',
+        'category_id',
+        'catering_partner_id',
+        'ingredient_tags',
+        'taste_tags'
     ];
 
     protected $casts = [
+        'price' => 'float',
+        'calories' => 'integer',
+        'proteins' => 'float',
+        'carbs' => 'float',
+        'fats' => 'float',
+        'sugars' => 'float',
+        'sodium' => 'float',
+        'fiber' => 'float',
         'is_available' => 'boolean',
         'is_diet_menu' => 'boolean',
-        'price' => 'decimal:2',
-        'calories' => 'decimal:2',
-        'carbohydrates' => 'decimal:2',
-        'proteins' => 'decimal:2',
-        'fats' => 'decimal:2',
-        'sugars' => 'decimal:2',
-        'sodium' => 'decimal:2',
+        'ingredient_tags' => 'json',
+        'taste_tags' => 'json'
     ];
 
-    
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
     public function cateringPartner()
     {
         return $this->belongsTo(CateringPartner::class);
     }
 
-    public function category()
+    public function reviews()
     {
-        return $this->belongsTo(Category::class);
+        return $this->hasMany(Review::class);
     }
 
     public function orderItems()
@@ -60,51 +71,208 @@ class Menu extends Model
         return $this->hasMany(CartItem::class);
     }
 
-    public function reviews()
-    {
-        return $this->hasMany(Review::class);
-    }
-
-    // Relasi baru untuk fitur diet
+    /**
+     * Relasi dengan diet tags
+     */
     public function dietTags()
     {
-        return $this->belongsToMany(DietTag::class, 'diet_tag_menu');
+        return $this->belongsToMany(DietTag::class, 'diet_tag_menu', 'menu_id', 'diet_tag_id');
     }
 
-    // Method untuk menghitung rating rata-rata
-    public function averageRating()
+    /**
+     * Mendapatkan rating rata-rata menu
+     */
+    public function getAverageRating()
     {
         return $this->reviews()->avg('rating') ?? 0;
     }
 
-    // Method untuk mengecek kesesuaian makanan dengan kondisi kesehatan
-    public function isSuitableForDiabetic()
+    /**
+     * Mendapatkan jumlah pesanan menu
+     */
+    public function getOrderCount()
     {
-        return $this->is_diet_menu && $this->sugars <= 5; // Contoh: makanan dengan kandungan gula <= 5g
+        return $this->orderItems()->count();
     }
 
-    public function isSuitableForHypertension()
+    /**
+     * Mendapatkan label metode memasak
+     */
+    public function getCookingMethodLabel(): string
     {
-        return $this->is_diet_menu && $this->sodium <= 400; // Contoh: makanan dengan kandungan sodium <= 400mg
+        $labels = [
+            'rebus' => 'Rebus',
+            'goreng' => 'Goreng',
+            'bakar' => 'Bakar',
+            'kukus' => 'Kukus',
+            'panggang' => 'Panggang',
+        ];
+
+        return $labels[$this->cooking_method] ?? 'Tidak ditentukan';
     }
 
-    public function isSuitableForHeartDisease()
+    /**
+     * Mendapatkan label jenis karbohidrat
+     */
+    public function getCarbohydrateTypeLabel(): string
     {
-        return $this->is_diet_menu && $this->fats <= 10 && $this->sodium <= 400; // Contoh: rendah lemak dan sodium
+        $labels = [
+            'kompleks' => 'Kompleks',
+            'olahan' => 'Olahan',
+        ];
+
+        return $labels[$this->carbohydrate_type] ?? 'Tidak ditentukan';
     }
 
-    public function isLowCalorie()
+    /**
+     * Cek apakah menu mengandung alergen tertentu
+     */
+    public function containsAllergen($allergen)
     {
-        return $this->calories <= 400; // Contoh: makanan dengan kalori <= 400
+        $ingredientTags = json_decode($this->ingredient_tags ?? '[]', true);
+        return in_array($allergen, $ingredientTags);
     }
 
-    public function isMediumCalorie()
+    /**
+     * Mendapatkan tag bahan dalam format yang mudah dibaca
+     */
+    public function getIngredientTagsString()
     {
-        return $this->calories > 400 && $this->calories <= 600; // Contoh: makanan dengan kalori 400-600
+        $ingredientTags = json_decode($this->ingredient_tags ?? '[]', true);
+        if (empty($ingredientTags)) {
+            return 'Tidak ada';
+        }
+        
+        $labels = [
+            'jeroan' => 'Jeroan',
+            'daging' => 'Daging',
+            'telur' => 'Telur',
+            'susu' => 'Susu',
+            'udang' => 'Udang',
+            'kacang' => 'Kacang-kacangan',
+            'kulit_ayam' => 'Kulit Ayam',
+            'kuning_telur' => 'Kuning Telur',
+        ];
+        
+        $result = [];
+        foreach ($ingredientTags as $tag) {
+            $result[] = $labels[$tag] ?? $tag;
+        }
+        
+        return implode(', ', $result);
     }
 
-    public function isHighCalorie()
+    /**
+     * Mendapatkan tag rasa dalam format yang mudah dibaca
+     */
+    public function getTasteTagsString()
     {
-        return $this->calories > 600; // Contoh: makanan dengan kalori > 600
+        $tasteTags = json_decode($this->taste_tags ?? '[]', true);
+        if (empty($tasteTags)) {
+            return 'Tidak ada';
+        }
+        
+        $labels = [
+            'pedas' => 'Pedas',
+            'manis' => 'Manis',
+            'gurih' => 'Gurih',
+            'asin' => 'Asin',
+            'asam' => 'Asam',
+            'saus_asin' => 'Saus Asin',
+        ];
+        
+        $result = [];
+        foreach ($tasteTags as $tag) {
+            $result[] = $labels[$tag] ?? $tag;
+        }
+        
+        return implode(', ', $result);
+    }
+
+    /**
+     * Mendapatkan daftar tag diet yang cocok untuk kondisi kesehatan tertentu
+     */
+    public function getDietTagsForHealthCondition($condition)
+    {
+        $conditionTagMap = [
+            'diabetes' => 'diabetes-friendly',
+            'hipertensi' => 'hipertensi-friendly',
+            'jantung' => 'jantung-friendly',
+            'kolesterol' => 'kolesterol-friendly',
+            'ambeien' => 'ambeien-friendly',
+        ];
+        
+        $tagSlug = $conditionTagMap[$condition] ?? null;
+        
+        if (!$tagSlug) {
+            return collect([]);
+        }
+        
+        return $this->dietTags()->where('slug', $tagSlug)->get();
+    }
+
+    /**
+     * Cek apakah menu cocok untuk kondisi kesehatan tertentu
+     */
+    public function isSuitableFor($condition)
+    {
+        return $this->getDietTagsForHealthCondition($condition)->isNotEmpty();
+    }
+
+    /**
+     * Mendapatkan skor kesesuaian dengan kondisi kesehatan
+     * Semakin tinggi skor, semakin cocok menu ini untuk kondisi tersebut
+     */
+    public function getHealthSuitabilityScore($healthProfile)
+    {
+        $score = 0;
+        $conditions = [];
+        
+        if ($healthProfile->has_diabetes) $conditions[] = 'diabetes';
+        if ($healthProfile->has_hypertension) $conditions[] = 'hipertensi';
+        if ($healthProfile->has_heart_disease) $conditions[] = 'jantung';
+        if ($healthProfile->has_cholesterol) $conditions[] = 'kolesterol';
+        if ($healthProfile->has_hemorrhoids) $conditions[] = 'ambeien';
+        
+        if (empty($conditions)) {
+            return 100; // Tidak ada kondisi khusus, semua menu cocok
+        }
+        
+        foreach ($conditions as $condition) {
+            if ($this->isSuitableFor($condition)) {
+                $score += (100 / count($conditions));
+            }
+        }
+        
+        return $score;
+    }
+
+    /**
+     * Menghitung skor kesesuaian dengan target kalori pengguna
+     * Semakin tinggi skor, semakin sesuai menu ini dengan target kalori
+     */
+    public function getCalorieMatchScore($targetCalories, $mealType = 'lunch')
+    {
+        // Persentase target kalori berdasarkan waktu makan
+        $mealPercentages = [
+            'breakfast' => 0.25, // 25% dari target harian
+            'lunch' => 0.35,     // 35% dari target harian
+            'dinner' => 0.30,    // 30% dari target harian
+            'snack' => 0.10,     // 10% dari target harian
+        ];
+        
+        $percentage = $mealPercentages[$mealType] ?? 0.35; // Default ke makan siang jika tidak ditentukan
+        
+        // Kalori ideal untuk waktu makan ini
+        $idealCalories = $targetCalories * $percentage;
+        
+        // Hitung deviasi (perbedaan) dari kalori ideal
+        $deviation = abs($this->calories - $idealCalories) / $idealCalories;
+        
+        // Konversi ke skor (0-100), semakin kecil deviasi semakin tinggi skor
+        $score = max(0, 100 - ($deviation * 100));
+        
+        // Jika deviasi lebih dari 50%, skor minimal 0
+        return max(0, $score);
     }
 }

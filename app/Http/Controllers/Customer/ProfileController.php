@@ -21,23 +21,58 @@ class ProfileController extends Controller
         $healthProfile = $user->healthProfile ?? new HealthProfile();
         $dietPreference = $user->dietPreference ?? new DietPreference();
         
-        // List pilihan diet untuk dropdown
-        $dietTypes = [
-            'regular' => 'Regular (Seimbang)',
-            'low_carb' => 'Rendah Karbohidrat',
-            'low_fat' => 'Rendah Lemak',
-            'low_sugar' => 'Rendah Gula',
-            'low_sodium' => 'Rendah Sodium/Garam',
-            'high_protein' => 'Tinggi Protein',
-            'vegetarian' => 'Vegetarian',
-            'vegan' => 'Vegan',
+        // List pilihan untuk dropdown
+        $activityLevels = [
+            'sedentari' => 'Sedentari (tidak aktif)',
+            'ringan' => 'Ringan (olahraga ringan 1-3 hari/minggu)',
+            'sedang' => 'Sedang (olahraga sedang 3-5 hari/minggu)',
+            'berat' => 'Berat (olahraga berat 6-7 hari/minggu)',
+            'sangat_berat' => 'Sangat Berat (pekerjaan fisik + olahraga)',
+        ];
+
+        $dietGoals = [
+            'turun_bb' => 'Turun Berat Badan',
+            'naik_bb' => 'Naik Berat Badan',
+            'jaga_bb' => 'Jaga Berat Badan',
+        ];
+
+        // Opsi alergi makanan sesuai requirement
+        $allergyOptions = [
+            'udang' => 'Udang',
+            'telur' => 'Telur',
+            'kacang' => 'Kacang-kacangan',
+            'susu' => 'Susu/Dairy',
+            'ikan' => 'Ikan',
+            'seafood' => 'Seafood',
+            'gluten' => 'Gluten',
+        ];
+
+        // Opsi preferensi rasa sesuai requirement
+        $tasteOptions = [
+            'pedas' => 'Pedas',
+            'manis' => 'Manis',
+            'gurih' => 'Gurih',
+            'asin' => 'Asin',
+        ];
+
+        // Opsi teknik masak sesuai requirement
+        $cookingMethods = [
+            'rebus' => 'Rebus',
+            'goreng' => 'Goreng',
+            'bakar' => 'Bakar',
+            'kukus' => 'Kukus',
+            'panggang' => 'Panggang',
         ];
         
         return view('customer.profile.edit', compact(
             'user', 
             'healthProfile', 
             'dietPreference',
-            'dietTypes'
+            'activityLevels',
+            'dietGoals',
+            'allergyOptions',
+            'tasteOptions',
+            'cookingMethods'
         ));
     }
     
@@ -99,56 +134,70 @@ class ProfileController extends Controller
      */
     public function updateHealthProfile(Request $request)
     {
-        $user = Auth::user();
+        $user = auth()->user();
         
-        // Validasi data umum pengguna
-        $request->validate([
+        // Validasi input dasar
+        $validated = $request->validate([
             'birthdate' => 'required|date|before:today',
-            'gender' => 'required|in:male,female,other',
-            'height' => 'required|numeric|min:50|max:250',
-            'weight' => 'required|numeric|min:20|max:300',
+            'gender' => 'required|in:pria,wanita',
+            'height' => 'required|numeric|min:100|max:250',
+            'weight' => 'required|numeric|min:30|max:300',
+            'activity_level' => 'required|in:sedentari,ringan,sedang,berat,sangat_berat',
+            
+            // Kondisi kesehatan
+            'has_diabetes' => 'nullable|boolean',
+            'has_hypertension' => 'nullable|boolean',
+            'has_heart_disease' => 'nullable|boolean',
+            'has_cholesterol' => 'nullable|boolean',
+            'has_hemorrhoids' => 'nullable|boolean',
+            
+            // Preferensi diet
+            'diet_goal' => 'required|in:turun_bb,naik_bb,jaga_bb',
+            'deficit_surplus_percentage' => 'nullable|numeric|min:10|max:20',
+            'food_allergies' => 'nullable|array',
+            'taste_preferences' => 'nullable|array',
+            'cooking_method_preferences' => 'nullable|array',
         ]);
         
-        // Perbarui data dasar pengguna
+        // Update data user
         $user->update([
-            'birthdate' => $request->birthdate,
-            'gender' => $request->gender,
-            'height' => $request->height,
-            'weight' => $request->weight,
+            'birthdate' => $validated['birthdate'],
+            'gender' => $validated['gender'],
+            'height' => $validated['height'],
+            'weight' => $validated['weight'],
+            'activity_level' => $validated['activity_level'],
         ]);
         
-        // Perbarui atau buat profil kesehatan
-        $healthProfile = $user->healthProfile ?? new HealthProfile();
-        $healthProfile->user_id = $user->id;
-        $healthProfile->has_diabetes = $request->has('has_diabetes');
-        $healthProfile->has_hypertension = $request->has('has_hypertension');
-        $healthProfile->has_heart_disease = $request->has('has_heart_disease');
-        $healthProfile->has_cholesterol = $request->has('has_cholesterol');
-        $healthProfile->has_food_allergies = $request->has('has_food_allergies');
-        $healthProfile->food_allergies_detail = $request->food_allergies_detail;
-        $healthProfile->other_conditions = $request->other_conditions;
-        $healthProfile->save();
+        // Update atau buat profil kesehatan
+        $user->healthProfile()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'has_diabetes' => $request->has('has_diabetes'),
+                'has_hypertension' => $request->has('has_hypertension'),
+                'has_heart_disease' => $request->has('has_heart_disease'),
+                'has_cholesterol' => $request->has('has_cholesterol'),
+                'has_hemorrhoids' => $request->has('has_hemorrhoids'),
+                'has_food_allergies' => !empty($validated['food_allergies']),
+                'food_allergies_detail' => !empty($validated['food_allergies']) ? implode(', ', $validated['food_allergies']) : null,
+            ]
+        );
         
-        // Validasi data preferensi diet
-        $request->validate([
-            'diet_type' => 'required|in:regular,low_carb,low_fat,low_sugar,low_sodium,high_protein,vegetarian,vegan',
-            'daily_calorie_target' => 'nullable|integer|min:1000|max:5000',
-        ]);
+        // Update atau buat preferensi diet
+        $user->dietPreference()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'diet_goal' => $validated['diet_goal'],
+                'deficit_surplus_percentage' => $validated['deficit_surplus_percentage'] ?? 15,
+                'food_allergies' => $validated['food_allergies'] ?? [],
+                'taste_preferences' => $validated['taste_preferences'] ?? [],
+                'cooking_method_preferences' => $validated['cooking_method_preferences'] ?? [],
+            ]
+        );
         
-        // Gunakan service untuk menghitung kebutuhan kalori jika tidak disediakan
-        $recommendationService = new DietRecommendationService();
-        $calculatedCalories = $recommendationService->calculateDailyCalorieNeeds($user);
+        // Hitung dan simpan metrics user (BMI, BMR, TDEE, Target Calories)
+        $dietService = app(DietRecommendationService::class);
+        $dietService->calculateAndStoreUserMetrics($user);
         
-        // Perbarui atau buat preferensi diet
-        $dietPreference = $user->dietPreference ?? new DietPreference();
-        $dietPreference->user_id = $user->id;
-        $dietPreference->diet_type = $request->diet_type;
-        $dietPreference->daily_calorie_target = $request->daily_calorie_target ?? $calculatedCalories;
-        $dietPreference->gluten_free = $request->has('gluten_free');
-        $dietPreference->dairy_free = $request->has('dairy_free');
-        $dietPreference->save();
-        
-        return redirect()->route('customer.profile.edit', ['tab' => 'health'])
-            ->with('success', 'Profil kesehatan Anda berhasil diperbarui.');
+        return redirect()->back()->with('success', 'Profil kesehatan berhasil diperbarui.');
     }
 }

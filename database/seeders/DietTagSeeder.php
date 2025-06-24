@@ -1,5 +1,5 @@
 <?php
-// database/seeders/DietTagSeeder.php
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -12,67 +12,69 @@ class DietTagSeeder extends Seeder
      */
     public function run(): void
     {
-        $tags = [
+        $dietTags = [
             [
-                'name' => 'Low Fat',
-                'description' => 'Menu dengan kandungan lemak rendah, cocok untuk diet rendah lemak atau jantung.',
+                'name' => 'Rendah Gula',
+                'description' => 'Menu dengan kandungan gula ≤ 10g per porsi',
+                'slug' => 'rendah-gula',
             ],
             [
-                'name' => 'Low Sugar',
-                'description' => 'Menu dengan kandungan gula rendah, cocok untuk diabetes atau diet gula.',
+                'name' => 'Rendah Sodium',
+                'description' => 'Menu dengan kandungan sodium ≤ 600mg per porsi',
+                'slug' => 'rendah-sodium',
             ],
             [
-                'name' => 'Low Sodium',
-                'description' => 'Menu dengan kandungan garam rendah, cocok untuk hipertensi atau penyakit jantung.',
+                'name' => 'Rendah Lemak',
+                'description' => 'Menu dengan kandungan lemak ≤ 10g per porsi',
+                'slug' => 'rendah-lemak',
             ],
             [
-                'name' => 'High Fiber',
-                'description' => 'Menu dengan serat tinggi, cocok untuk pencernaan dan diet seimbang.',
+                'name' => 'Tinggi Serat',
+                'description' => 'Menu dengan kandungan serat ≥ 3g per porsi',
+                'slug' => 'tinggi-serat',
             ],
             [
-                'name' => 'Gluten Free',
-                'description' => 'Menu tanpa gluten, cocok untuk penderita celiac atau sensitivitas gluten.',
+                'name' => 'Karbohidrat Kompleks',
+                'description' => 'Menu dengan karbohidrat kompleks yang lebih sehat',
+                'slug' => 'karbo-kompleks',
             ],
             [
-                'name' => 'Dairy Free',
-                'description' => 'Menu tanpa produk susu, cocok untuk intoleransi laktosa atau alergi susu.',
+                'name' => 'Diabetes-Friendly',
+                'description' => 'Menu yang aman untuk penderita diabetes',
+                'slug' => 'diabetes-friendly',
             ],
             [
-                'name' => 'Vegetarian',
-                'description' => 'Menu tanpa daging, tetapi mungkin mengandung produk hewani lain seperti telur atau susu.',
+                'name' => 'Hipertensi-Friendly',
+                'description' => 'Menu yang aman untuk penderita hipertensi',
+                'slug' => 'hipertensi-friendly',
             ],
             [
-                'name' => 'Vegan',
-                'description' => 'Menu tanpa produk hewani apapun, termasuk daging, telur, susu, dll.',
+                'name' => 'Jantung-Friendly',
+                'description' => 'Menu yang aman untuk penderita penyakit jantung',
+                'slug' => 'jantung-friendly',
             ],
             [
-                'name' => 'Heart Healthy',
-                'description' => 'Menu yang dirancang untuk kesehatan jantung, rendah lemak jenuh dan sodium.',
+                'name' => 'Kolesterol-Friendly',
+                'description' => 'Menu yang aman untuk penderita kolesterol tinggi',
+                'slug' => 'kolesterol-friendly',
             ],
             [
-                'name' => 'Diabetic Friendly',
-                'description' => 'Menu yang cocok untuk penderita diabetes, dengan gula dan karbohidrat terkontrol.',
-            ],
-            [
-                'name' => 'Contains Nuts',
-                'description' => 'Menu yang mengandung kacang-kacangan, perhatian bagi yang alergi kacang.',
-            ],
-            [
-                'name' => 'Contains Seafood',
-                'description' => 'Menu yang mengandung makanan laut, perhatian bagi yang alergi seafood.',
-            ],
-            [
-                'name' => 'Contains Dairy',
-                'description' => 'Menu yang mengandung produk susu, perhatian bagi yang alergi susu.',
-            ],
-            [
-                'name' => 'Contains Gluten',
-                'description' => 'Menu yang mengandung gluten, perhatian bagi yang sensitif terhadap gluten.',
+                'name' => 'Ambeien-Friendly',
+                'description' => 'Menu yang aman untuk penderita ambeien',
+                'slug' => 'ambeien-friendly',
             ],
         ];
 
-        foreach ($tags as $tag) {
-            DietTag::create($tag);
+        foreach ($dietTags as $tag) {
+            DietTag::updateOrCreate(
+                ['name' => $tag['name']],
+                [
+                    'name' => $tag['name'],
+                    'description' => $tag['description']
+                ]
+            );
         }
+        
+        $this->command->info('Diet tags seeded successfully!');
     }
 }

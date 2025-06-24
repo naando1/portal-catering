@@ -1,199 +1,260 @@
-{{-- resources/views/menus/diet.blade.php --}}
 @extends('layouts.main')
 
+@section('title', 'Menu Diet Sehat')
+
 @section('content')
-<div class="container py-5">
+<div class="container py-4">
+    <h1 class="mb-4">Rekomendasi Menu Diet</h1>
+    
     <div class="row">
-        <div class="col-lg-3">
-            <div class="card shadow-sm mb-4">
+        <div class="col-md-4 mb-4">
+            <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Filter Menu Diet</h5>
+                    <h5 class="mb-0">Profil Kesehatan Anda</h5>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('menus.diet') }}" method="GET">
-                        <div class="mb-3">
-                            <label for="search" class="form-label">Cari Menu</label>
-                            <input type="text" class="form-control" id="search" name="search" value="{{ request('search') }}" placeholder="Nama menu...">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="category" class="form-label">Kategori</label>
-                            <select class="form-select" id="category" name="category">
-                                <option value="">Semua Kategori</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
-                                        {{ $category->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="diet_tag" class="form-label">Label Diet</label>
-                            <select class="form-select" id="diet_tag" name="diet_tag">
-                                <option value="">Semua Label</option>
-                                @foreach($dietTags as $tag)
-                                    <option value="{{ $tag->id }}" {{ request('diet_tag') == $tag->id ? 'selected' : '' }}>
-                                        {{ $tag->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="condition" class="form-label">Kondisi Kesehatan</label>
-                            <select class="form-select" id="condition" name="condition">
-                                <option value="">Semua Kondisi</option>
-                                <option value="diabetes" {{ request('condition') == 'diabetes' ? 'selected' : '' }}>Diabetes</option>
-                                <option value="hypertension" {{ request('condition') == 'hypertension' ? 'selected' : '' }}>Hipertensi</option>
-                                <option value="heart" {{ request('condition') == 'heart' ? 'selected' : '' }}>Penyakit Jantung</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="calorie" class="form-label">Kalori</label>
-                            <select class="form-select" id="calorie" name="calorie">
-                                <option value="">Semua Range</option>
-                                <option value="low" {{ request('calorie') == 'low' ? 'selected' : '' }}>Rendah (≤ 400 kkal)</option>
-                                <option value="medium" {{ request('calorie') == 'medium' ? 'selected' : '' }}>Sedang (401-600 kkal)</option>
-                                <option value="high" {{ request('calorie') == 'high' ? 'selected' : '' }}>Tinggi (> 600 kkal)</option>
-                            </select>
-                        </div>
-                        
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-filter me-1"></i> Terapkan Filter
-                            </button>
-                            <a href="{{ route('menus.diet') }}" class="btn btn-outline-secondary">
-                                <i class="fas fa-redo me-1"></i> Reset Filter
-                            </a>
-                        </div>
-                    </form>
+                    <div class="mb-3">
+                        <h6>Status BMI</h6>
+                        <p class="mb-1">BMI: <strong>{{ number_format($userMetrics['bmi'], 1) }}</strong></p>
+                        <p class="mb-0">Kategori: <strong>{{ $userMetrics['bmi_category'] }}</strong></p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>Kebutuhan Kalori</h6>
+                        <p class="mb-1">BMR: <strong>{{ number_format($userMetrics['bmr']) }} kkal/hari</strong></p>
+                        <p class="mb-1">TDEE: <strong>{{ number_format($userMetrics['tdee']) }} kkal/hari</strong></p>
+                        <p class="mb-0">Target: <strong>{{ number_format($userMetrics['target_calories']) }} kkal/hari</strong></p>
+                    </div>
+                    
+                    <div class="mb-0">
+                        <h6>Kondisi Kesehatan</h6>
+                        <ul class="list-unstyled mb-0">
+                            @if(Auth::user()->healthProfile->has_diabetes)
+                                <li><i class="fas fa-check-circle text-danger"></i> Diabetes</li>
+                            @endif
+                            @if(Auth::user()->healthProfile->has_hypertension)
+                                <li><i class="fas fa-check-circle text-danger"></i> Hipertensi</li>
+                            @endif
+                            @if(Auth::user()->healthProfile->has_heart_disease)
+                                <li><i class="fas fa-check-circle text-danger"></i> Penyakit Jantung</li>
+                            @endif
+                            @if(Auth::user()->healthProfile->has_cholesterol)
+                                <li><i class="fas fa-check-circle text-danger"></i> Kolesterol Tinggi</li>
+                            @endif
+                            @if(Auth::user()->healthProfile->has_hemorrhoids)
+                                <li><i class="fas fa-check-circle text-danger"></i> Ambeien</li>
+                            @endif
+                            @if(!Auth::user()->healthProfile->has_diabetes && 
+                                !Auth::user()->healthProfile->has_hypertension && 
+                                !Auth::user()->healthProfile->has_heart_disease && 
+                                !Auth::user()->healthProfile->has_cholesterol && 
+                                !Auth::user()->healthProfile->has_hemorrhoids)
+                                <li><i class="fas fa-check-circle text-success"></i> Tidak ada kondisi khusus</li>
+                            @endif
+                        </ul>
+                    </div>
                 </div>
             </div>
-            
-            @if(Auth::check())
-                @if($hasCompleteProfile)
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">Profil Kesehatan Anda</h5>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Menu Rekomendasi untuk Anda</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Rekomendasi menu berdasarkan kondisi kesehatan dan preferensi Anda.</p>
+                    
+                    @if($recommendedMenus->isEmpty())
+                        <div class="alert alert-info">
+                            Belum ada rekomendasi menu yang sesuai. Silakan perbarui preferensi diet Anda atau hubungi kami untuk konsultasi.
                         </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between mb-2">
-                                <div>BMI:</div>
-                                <div class="fw-bold">{{ Auth::user()->getBmi() }}</div>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <div>Kategori:</div>
-                                <div class="fw-bold">{{ Auth::user()->getBmiCategory() }}</div>
-                            </div>
-                            @if(Auth::user()->dietPreference)
-                                <div class="d-flex justify-content-between mb-2">
-                                    <div>Jenis Diet:</div>
-                                    <div class="fw-bold">
-                                        @if(Auth::user()->dietPreference->diet_type == 'regular')
-                                            Diet Seimbang
-                                        @elseif(Auth::user()->dietPreference->diet_type == 'low_carb')
-                                            Rendah Karbohidrat
-                                        @elseif(Auth::user()->dietPreference->diet_type == 'low_fat')
-                                            Rendah Lemak
-                                        @elseif(Auth::user()->dietPreference->diet_type == 'low_sugar')
-                                            Rendah Gula
-                                        @elseif(Auth::user()->dietPreference->diet_type == 'low_sodium')
-                                            Rendah Garam
-                                        @elseif(Auth::user()->dietPreference->diet_type == 'high_protein')
-                                            Tinggi Protein
-                                        @elseif(Auth::user()->dietPreference->diet_type == 'vegetarian')
-                                            Vegetarian
-                                        @elseif(Auth::user()->dietPreference->diet_type == 'vegan')
-                                            Vegan
+                    @else
+                        <div class="row">
+                            @foreach($recommendedMenus as $menu)
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100 shadow-sm">
+                                        @if($menu->image)
+                                            <img src="{{ asset('storage/' . $menu->image) }}" class="card-img-top" alt="{{ $menu->name }}" style="height: 200px; object-fit: cover;">
+                                        @else
+                                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                                <i class="fas fa-utensils fa-3x text-secondary"></i>
+                                            </div>
                                         @endif
+                                        
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ $menu->name }}</h5>
+                                            <p class="card-text text-muted">{{ Str::limit($menu->description, 100) }}</p>
+                                            
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="badge bg-info">{{ $menu->calories }} kkal</span>
+                                                <span class="badge bg-success">{{ number_format($menu->price, 0, ',', '.') }} IDR</span>
+                                            </div>
+                                            
+                                            <div class="row mb-3">
+                                                <div class="col-4 text-center">
+                                                    <small class="d-block text-muted">Protein</small>
+                                                    <span>{{ $menu->proteins }}g</span>
+                                                </div>
+                                                <div class="col-4 text-center">
+                                                    <small class="d-block text-muted">Karbo</small>
+                                                    <span>{{ $menu->carbs }}g</span>
+                                                </div>
+                                                <div class="col-4 text-center">
+                                                    <small class="d-block text-muted">Lemak</small>
+                                                    <span>{{ $menu->fats }}g</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="d-flex justify-content-between">
+                                                <a href="{{ route('menus.show', $menu->id) }}" class="btn btn-outline-primary btn-sm">Detail</a>
+                                                
+                                                <form action="{{ route('cart.add', $menu->id) }}" method="POST">
+                                                    @csrf
+                                                    <input type="hidden" name="quantity" value="1">
+                                                    <button type="submit" class="btn btn-primary btn-sm">
+                                                        <i class="fas fa-cart-plus"></i> Tambah
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="card-footer bg-white">
+                                            <small class="text-muted">Kesesuaian: {{ number_format($menu->similarity_score * 100, 0) }}%</small>
+                                            
+                                            <button type="button" class="btn btn-sm btn-outline-secondary float-end" data-bs-toggle="modal" data-bs-target="#feedbackModal{{ $menu->id }}">
+                                                <i class="fas fa-thumbs-up"></i> Feedback
+                                            </button>
+                                            
+                                            <!-- Modal Feedback -->
+                                            <div class="modal fade" id="feedbackModal{{ $menu->id }}" tabindex="-1" aria-labelledby="feedbackModalLabel{{ $menu->id }}" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <form action="{{ route('menus.feedback', $menu->id) }}" method="POST">
+                                                            @csrf
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="feedbackModalLabel{{ $menu->id }}">Feedback untuk {{ $menu->name }}</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label">Apakah rekomendasi ini relevan untuk Anda?</label>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="is_relevant" id="relevant_yes{{ $menu->id }}" value="1" checked>
+                                                                        <label class="form-check-label" for="relevant_yes{{ $menu->id }}">
+                                                                            Ya, rekomendasi ini sesuai dengan kebutuhan saya
+                                                                        </label>
+                                                                    </div>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="is_relevant" id="relevant_no{{ $menu->id }}" value="0">
+                                                                        <label class="form-check-label" for="relevant_no{{ $menu->id }}">
+                                                                            Tidak, rekomendasi ini kurang sesuai
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="mb-3">
+                                                                    <label for="comment{{ $menu->id }}" class="form-label">Komentar (opsional)</label>
+                                                                    <textarea class="form-control" id="comment{{ $menu->id }}" name="comment" rows="3"></textarea>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                                                <button type="submit" class="btn btn-primary">Kirim Feedback</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            @endif
-                            <div class="mt-2">
-                                <a href="{{ route('customer.profile.edit', ['tab' => 'health']) }}" class="btn btn-sm btn-outline-success w-100">
-                                    <i class="fas fa-edit me-1"></i> Edit Profil Kesehatan
-                                </a>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Rekomendasi Kalori per Waktu Makan</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <h6>Sarapan</h6>
+                                    <h4 class="text-primary">{{ round($userMetrics['target_calories'] * 0.25) }} kkal</h4>
+                                    <small class="text-muted">25% dari total</small>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                @else
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-info text-white">
-                            <h5 class="mb-0">Dapatkan Rekomendasi</h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="mb-3">Isi profil kesehatan Anda untuk mendapatkan rekomendasi menu diet yang sesuai dengan kebutuhan Anda.</p>
-                            <div class="d-grid">
-                                <a href="{{ route('customer.profile.edit', ['tab' => 'health']) }}" class="btn btn-info">
-                                    <i class="fas fa-clipboard-list me-1"></i> Isi Profil Kesehatan
-                                </a>
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <h6>Makan Siang</h6>
+                                    <h4 class="text-primary">{{ round($userMetrics['target_calories'] * 0.35) }} kkal</h4>
+                                    <small class="text-muted">35% dari total</small>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                @endif
-            @else
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Rekomendasi Pribadi</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-3">Login untuk mendapatkan rekomendasi menu diet yang dipersonalisasi sesuai kondisi kesehatan Anda.</p>
-                        <div class="d-grid">
-                            <a href="{{ route('login') }}" class="btn btn-primary">
-                                <i class="fas fa-sign-in-alt me-1"></i> Login
-                            </a>
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <h6>Makan Malam</h6>
+                                    <h4 class="text-primary">{{ round($userMetrics['target_calories'] * 0.30) }} kkal</h4>
+                                    <small class="text-muted">30% dari total</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <h6>Camilan</h6>
+                                    <h4 class="text-primary">{{ round($userMetrics['target_calories'] * 0.10) }} kkal</h4>
+                                    <small class="text-muted">10% dari total</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            @endif
-        </div>
-        
-        <div class="col-lg-9">
-            @if($hasCompleteProfile && $personalRecommendations && $personalRecommendations->count() > 0)
-                <div class="mb-4">
-                    <h4 class="mb-3">Rekomendasi Menu untuk Anda</h4>
-                    <div class="row g-3">
-                        @foreach($personalRecommendations as $menu)
-                            <div class="col-md-4">
+            </div>
+
+            @if($feedbackRecommendations->isNotEmpty())
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Menu Populer untuk Kondisi Kesehatan Anda</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Menu yang disukai oleh pengguna lain dengan kondisi kesehatan serupa.</p>
+                    
+                    <div class="row">
+                        @foreach($feedbackRecommendations as $menu)
+                            <div class="col-md-6 col-lg-3 mb-4">
                                 <div class="card h-100 shadow-sm">
                                     @if($menu->image)
-                                        <img src="{{ asset('storage/' . $menu->image) }}" class="card-img-top" alt="{{ $menu->name }}" style="height: 160px; object-fit: cover;">
+                                        <img src="{{ asset('storage/' . $menu->image) }}" class="card-img-top" alt="{{ $menu->name }}" style="height: 150px; object-fit: cover;">
                                     @else
-                                        <div class="bg-light text-center py-5">
-                                            <i class="fas fa-utensils fa-3x text-muted"></i>
+                                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                                            <i class="fas fa-utensils fa-3x text-secondary"></i>
                                         </div>
                                     @endif
                                     
                                     <div class="card-body">
                                         <h6 class="card-title">{{ $menu->name }}</h6>
-                                        <p class="card-text small text-muted mb-1">{{ $menu->cateringPartner->business_name }}</p>
-                                        <p class="card-text small mb-2">{{ Str::limit($menu->description, 60) }}</p>
-                                        
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <div>
-                                                <span class="badge bg-primary">{{ $menu->calories ?? '?' }} kkal</span>
-                                            </div>
-                                            <div>
-                                                <span class="fw-bold text-success">Rp {{ number_format($menu->price, 0, ',', '.') }}</span>
-                                            </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="badge bg-info">{{ $menu->calories }} kkal</span>
+                                            <span class="badge bg-success">{{ number_format($menu->price, 0, ',', '.') }} IDR</span>
                                         </div>
                                         
-                                        <div class="d-flex flex-wrap gap-1 mb-2">
-                                            @foreach($menu->dietTags as $tag)
-                                                <span class="badge bg-info">{{ $tag->name }}</span>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="card-footer bg-white">
-                                        <div class="d-grid gap-2">
-                                            <a href="{{ route('menus.diet.show', $menu->id) }}" class="btn btn-sm btn-outline-primary">Detail</a>
+                                        <div class="d-flex justify-content-between">
+                                            <a href="{{ route('menus.show', $menu->id) }}" class="btn btn-outline-primary btn-sm">Detail</a>
+                                            
                                             <form action="{{ route('cart.add', $menu->id) }}" method="POST">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-primary w-100">
-                                                    <i class="fas fa-cart-plus"></i> Tambah ke Keranjang
+                                                <input type="hidden" name="quantity" value="1">
+                                                <button type="submit" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-cart-plus"></i>
                                                 </button>
                                             </form>
                                         </div>
@@ -203,74 +264,59 @@
                         @endforeach
                     </div>
                 </div>
-                
-                <div class="border-top pt-4 mb-4"></div>
-            @endif
-            
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="mb-0">Menu Diet</h4>
-                <span class="text-muted">{{ $menus->total() }} menu ditemukan</span>
             </div>
-            
-            @if($menus->count() > 0)
-                <div class="row g-3">
-                    @foreach($menus as $menu)
-                        <div class="col-md-4">
-                            <div class="card h-100 shadow-sm">
-                                @if($menu->image)
-                                    <img src="{{ asset('storage/' . $menu->image) }}" class="card-img-top" alt="{{ $menu->name }}" style="height: 160px; object-fit: cover;">
-                                @else
-                                    <div class="bg-light text-center py-5">
-                                        <i class="fas fa-utensils fa-3x text-muted"></i>
-                                    </div>
-                                @endif
-                                
-                                <div class="card-body">
-                                    <h6 class="card-title">{{ $menu->name }}</h6>
-                                    <p class="card-text small text-muted mb-1">{{ $menu->cateringPartner->business_name }}</p>
-                                    <p class="card-text small mb-2">{{ Str::limit($menu->description, 60) }}</p>
-                                    
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <div>
-                                            <span class="badge bg-primary">{{ $menu->calories ?? '?' }} kkal</span>
-                                        </div>
-                                        <div>
-                                            <span class="fw-bold text-success">Rp {{ number_format($menu->price, 0, ',', '.') }}</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="d-flex flex-wrap gap-1 mb-2">
-                                        @foreach($menu->dietTags as $tag)
-                                            <span class="badge bg-info">{{ $tag->name }}</span>
-                                        @endforeach
-                                    </div>
-                                </div>
-                                
-                                <div class="card-footer bg-white">
-                                    <div class="d-grid gap-2">
-                                        <a href="{{ route('menus.diet.show', $menu->id) }}" class="btn btn-sm btn-outline-primary">Detail</a>
-                                        <form action="{{ route('cart.add', $menu->id) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-primary w-100">
-                                                <i class="fas fa-cart-plus"></i> Tambah ke Keranjang
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-                
-                <div class="mt-4 d-flex justify-content-center">
-                    {{ $menus->withQueryString()->links() }}
-                </div>
-            @else
-                <div class="alert alert-info">
-                    Tidak ada menu diet yang ditemukan dengan filter yang dipilih. Silakan coba filter lain.
-                </div>
             @endif
         </div>
     </div>
 </div>
+
+@push('styles')
+<style>
+.menu-card:hover {
+    transform: translateY(-5px);
+    transition: transform 0.3s ease;
+}
+
+.menu-card {
+    transition: transform 0.3s ease;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.text-orange {
+    color: #fd7e14 !important;
+}
+
+@media (max-width: 768px) {
+    .card-img-top {
+        height: 150px !important;
+    }
+}
+</style>
+@endpush
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Auto-submit form on select change (optional)
+    $('.form-select').on('change', function() {
+        if ($(this).closest('form').length) {
+            // Optional: auto-submit on filter change
+            // $(this).closest('form').submit();
+        }
+    });
+    
+    // Toggle filter collapse icon
+    $('#filterCollapse').on('show.bs.collapse', function() {
+        $('.card-header i.fa-chevron-down').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+    });
+    
+    $('#filterCollapse').on('hide.bs.collapse', function() {
+        $('.card-header i.fa-chevron-up').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+    });
+});
+</script>
+@endpush
 @endsection

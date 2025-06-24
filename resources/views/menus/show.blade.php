@@ -29,7 +29,7 @@
                                 <span class="badge bg-primary me-2">{{ $menu->category->name }}</span>
                                 <div class="text-warning">
                                     @php
-                                        $rating = $menu->averageRating();
+                                        $rating = $menu->getAverageRating();
                                         $fullStars = floor($rating);
                                         $halfStar = $rating - $fullStars >= 0.5;
                                     @endphp
@@ -154,6 +154,123 @@
                     </div>
                 </div>
             </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Informasi Nutrisi</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Kalori
+                                    <span class="badge bg-primary rounded-pill">{{ $menu->calories }} kkal</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Protein
+                                    <span class="badge bg-success rounded-pill">{{ $menu->proteins }} g</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Karbohidrat
+                                    <span class="badge bg-info rounded-pill">{{ $menu->carbs }} g</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Lemak
+                                    <span class="badge bg-warning rounded-pill">{{ $menu->fats }} g</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Gula
+                                    <span class="badge bg-danger rounded-pill">{{ $menu->sugars }} g</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Sodium/Garam
+                                    <span class="badge bg-secondary rounded-pill">{{ $menu->sodium }} mg</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Serat
+                                    <span class="badge bg-success rounded-pill">{{ $menu->fiber }} g</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Jenis Karbohidrat
+                                    <span class="badge bg-primary rounded-pill">{{ $menu->getCarbohydrateTypeLabel() }}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Informasi Tambahan</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Teknik Masak:</strong> {{ $menu->getCookingMethodLabel() }}</p>
+                            <p><strong>Bahan:</strong> {{ $menu->getIngredientTagsString() }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Rasa:</strong> {{ $menu->getTasteTagsString() }}</p>
+                            <p><strong>Menu Diet:</strong> {{ $menu->is_diet_menu ? 'Ya' : 'Tidak' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if($menu->dietTags->isNotEmpty())
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Tag Diet</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach($menu->dietTags as $tag)
+                                <span class="badge bg-success">{{ $tag->name }}</span>
+                            @endforeach
+                        </div>
+                        
+                        @auth
+                            @if(auth()->user()->healthProfile)
+                                <div class="mt-3 pt-3 border-top">
+                                    <h6>Kesesuaian dengan Kondisi Kesehatan Anda:</h6>
+                                    
+                                    @php
+                                        $suitabilityScore = $menu->getHealthSuitabilityScore(auth()->user()->healthProfile);
+                                        
+                                        if ($suitabilityScore >= 80) {
+                                            $badgeClass = 'bg-success';
+                                            $message = 'Sangat Cocok';
+                                        } elseif ($suitabilityScore >= 50) {
+                                            $badgeClass = 'bg-warning';
+                                            $message = 'Cukup Cocok';
+                                        } else {
+                                            $badgeClass = 'bg-danger';
+                                            $message = 'Kurang Cocok';
+                                        }
+                                    @endphp
+                                    
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1" style="height: 20px;">
+                                            <div class="progress-bar {{ $badgeClass }}" role="progressbar" 
+                                                 style="width: {{ $suitabilityScore }}%;" 
+                                                 aria-valuenow="{{ $suitabilityScore }}" aria-valuemin="0" aria-valuemax="100">
+                                                {{ $suitabilityScore }}%
+                                            </div>
+                                        </div>
+                                        <span class="badge {{ $badgeClass }} ms-2">{{ $message }}</span>
+                                    </div>
+                                </div>
+                            @endif
+                        @endauth
+                    </div>
+                </div>
+            @endif
         </div>
         
         <div class="col-lg-4">
@@ -248,8 +365,7 @@
     .rating-stars .rate > input:checked + label:hover,
     .rating-stars .rate > input:checked + label:hover ~ label,
     .rating-stars .rate > input:checked ~ label:hover,
-    .rating-stars .rate > input:checked ~ label:hover ~ label,
-    .rating-stars .rate > label:hover ~ input:checked ~ label {
+    .rating-stars .rate > input:checked ~ label:hover ~ label {
         color: #c59b08;
     }
 </style>

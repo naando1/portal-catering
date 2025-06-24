@@ -78,7 +78,7 @@
                                 <span class="fw-bold text-primary">Rp {{ number_format($menu->price, 0, ',', '.') }}</span>
                                 <div class="text-warning">
                                     @php
-                                        $rating = $menu->averageRating();
+                                        $rating = $menu->getAverageRating();
                                         $fullStars = floor($rating);
                                         $halfStar = $rating - $fullStars >= 0.5;
                                     @endphp

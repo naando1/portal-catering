@@ -12,6 +12,7 @@ class DietTag extends Model
     protected $fillable = [
         'name',
         'description',
+        'slug',
     ];
 
     public function menus()

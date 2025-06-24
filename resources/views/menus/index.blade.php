@@ -2,7 +2,15 @@
 
 @section('content')
 <div class="container py-4">
-    <h1 class="mb-4">Menu Catering</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Menu Kami</h1>
+        
+        @auth
+            <a href="{{ route('menus.diet') }}" class="btn btn-success">
+                <i class="fas fa-heartbeat me-1"></i> Rekomendasi Diet
+            </a>
+        @endauth
+    </div>
     
     <!-- Filter & Search Form -->
     <div class="card mb-4 shadow-sm">
@@ -58,7 +66,7 @@
                             <span class="badge bg-primary">{{ $menu->category->name }}</span>
                             <div class="text-warning">
                                 @php
-                                    $rating = $menu->averageRating();
+                                    $rating = $menu->getAverageRating();
                                     $fullStars = floor($rating);
                                     $halfStar = $rating - $fullStars >= 0.5;
                                 @endphp
