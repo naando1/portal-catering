@@ -37,22 +37,22 @@ class DietRecommendationService
         
         // Filter untuk diabetes
         if ($user->healthProfile->has_diabetes) {
-            $query->where('sugars', '<=', 10)
+            $query->where('sugars', '<', 10)
                   ->where('carbohydrate_type', 'kompleks')
-                  ->where('fats', '<=', 10);
+                  ->where('fats', '<', 10);
         }
         
         // Filter untuk hipertensi
         if ($user->healthProfile->has_hypertension) {
-            $query->where('sodium', '<=', 600)
+            $query->where('sodium', '<', 600)
                   ->whereRaw("NOT JSON_CONTAINS(taste_tags, '\"saus_asin\"')");
         }
         
         // Filter untuk penyakit jantung
         if ($user->healthProfile->has_heart_disease) {
-            $query->where('fats', '<=', 10)
-                  ->where('sodium', '<=', 600)
-                  ->where('sugars', '<=', 10)
+            $query->where('fats', '<', 10)
+                  ->where('sodium', '<', 600)
+                  ->where('sugars', '<', 10)
                   ->whereNotIn('cooking_method', ['goreng'])
                   ->whereRaw("NOT JSON_CONTAINS(ingredient_tags, '\"jeroan\"')")
                   ->whereRaw("NOT JSON_CONTAINS(ingredient_tags, '\"kuning_telur\"')");
@@ -60,7 +60,7 @@ class DietRecommendationService
         
         // Filter untuk kolesterol tinggi
         if ($user->healthProfile->has_cholesterol) {
-            $query->where('fats', '<=', 10)
+            $query->where('fats', '<', 10)
                   ->whereNotIn('cooking_method', ['goreng'])
                   ->whereRaw("NOT JSON_CONTAINS(ingredient_tags, '\"jeroan\"')")
                   ->whereRaw("NOT JSON_CONTAINS(ingredient_tags, '\"kulit_ayam\"')");
@@ -68,7 +68,7 @@ class DietRecommendationService
         
         // Filter untuk ambeien
         if ($user->healthProfile->has_hemorrhoids) {
-            $query->where('fiber', '>=', 3)
+            $query->where('fiber', '>', 3)
                   ->whereRaw("NOT JSON_CONTAINS(taste_tags, '\"pedas\"')")
                   ->whereNotIn('cooking_method', ['goreng']);
         }
@@ -89,8 +89,12 @@ class DietRecommendationService
         
         // Ambil preferensi pengguna
         $userPreferences = [
-            'taste_preferences' => json_decode($user->dietPreference->taste_preferences ?? '[]', true),
-            'cooking_method_preferences' => json_decode($user->dietPreference->cooking_method_preferences ?? '[]', true),
+            'taste_preferences' => is_array($user->dietPreference->taste_preferences) 
+                ? $user->dietPreference->taste_preferences 
+                : json_decode($user->dietPreference->taste_preferences ?? '[]', true),
+            'cooking_method_preferences' => is_array($user->dietPreference->cooking_method_preferences) 
+                ? $user->dietPreference->cooking_method_preferences 
+                : json_decode($user->dietPreference->cooking_method_preferences ?? '[]', true),
         ];
         
         // Ambil target kalori pengguna
@@ -156,6 +160,15 @@ class DietRecommendationService
      */
     private function calculateOverlap($array1, $array2)
     {
+        // Pastikan kedua parameter adalah array
+        if (!is_array($array1)) {
+            $array1 = [];
+        }
+        
+        if (!is_array($array2)) {
+            $array2 = [];
+        }
+        
         if (empty($array1) || empty($array2)) {
             return 0;
         }

@@ -173,7 +173,7 @@
                                 </li>
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     Karbohidrat
-                                    <span class="badge bg-info rounded-pill">{{ $menu->carbs }} g</span>
+                                    <span class="badge bg-info rounded-pill">{{ $menu->carbohydrates }} g</span>
                                 </li>
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     Lemak

@@ -299,7 +299,13 @@
                                         <label class="form-label">Pilih bahan makanan yang Anda alergi:</label>
                                         <div class="row">
                                             @php
-                                                $selectedAllergies = old('food_allergies', json_decode($dietPreference->food_allergies ?? '[]', true));
+                                                // Pastikan $selectedAllergies selalu berupa array
+                                                $selectedAllergies = old('food_allergies') ?? $dietPreference->food_allergies ?? [];
+                                                
+                                                // Jika $selectedAllergies adalah string, konversi ke array
+                                                if (is_string($selectedAllergies)) {
+                                                    $selectedAllergies = json_decode($selectedAllergies, true) ?? [];
+                                                }
                                             @endphp
                                             @foreach($allergyOptions as $value => $label)
                                                 <div class="col-md-4 mb-2">
@@ -329,7 +335,13 @@
                                         <label class="form-label">Pilih rasa yang Anda sukai:</label>
                                         <div class="row">
                                             @php
-                                                $selectedTastes = old('taste_preferences', json_decode($dietPreference->taste_preferences ?? '[]', true));
+                                                // Pastikan $selectedTastes selalu berupa array
+                                                $selectedTastes = old('taste_preferences') ?? $dietPreference->taste_preferences ?? [];
+                                                
+                                                // Jika $selectedTastes adalah string, konversi ke array
+                                                if (is_string($selectedTastes)) {
+                                                    $selectedTastes = json_decode($selectedTastes, true) ?? [];
+                                                }
                                             @endphp
                                             @foreach($tasteOptions as $value => $label)
                                                 <div class="col-md-3 mb-2">
@@ -359,7 +371,13 @@
                                         <label class="form-label">Pilih teknik masak yang Anda sukai:</label>
                                         <div class="row">
                                             @php
-                                                $selectedMethods = old('cooking_method_preferences', json_decode($dietPreference->cooking_method_preferences ?? '[]', true));
+                                                // Pastikan $selectedMethods selalu berupa array
+                                                $selectedMethods = old('cooking_method_preferences') ?? $dietPreference->cooking_method_preferences ?? [];
+                                                
+                                                // Jika $selectedMethods adalah string, konversi ke array
+                                                if (is_string($selectedMethods)) {
+                                                    $selectedMethods = json_decode($selectedMethods, true) ?? [];
+                                                }
                                             @endphp
                                             @foreach($cookingMethods as $value => $label)
                                                 <div class="col-md-4 mb-2">

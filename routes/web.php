@@ -124,13 +124,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Settings Management
     Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');
     Route::post('/settings', [AdminSettingController::class, 'update'])->name('settings.update');
-    
-    // Diet Tags Management
-    Route::resource('diet-tags', App\Http\Controllers\Admin\DietTagController::class);
-    
-    // Health Reports
-    Route::get('/health-reports', [App\Http\Controllers\Admin\HealthReportController::class, 'index'])->name('health-reports.index');
-    Route::get('/health-reports/export', [App\Http\Controllers\Admin\HealthReportController::class, 'export'])->name('health-reports.export');
 });
 
 // API Routes untuk AJAX calls
@@ -144,9 +137,6 @@ Route::middleware('auth')->prefix('api')->name('api.')->group(function () {
     Route::post('/nutrition/calculate-tdee', [App\Http\Controllers\Api\NutritionController::class, 'calculateTDEE'])->name('nutrition.calculate-tdee');
     Route::post('/nutrition/calculate-target-calories', [App\Http\Controllers\Api\NutritionController::class, 'calculateTargetCalories'])->name('nutrition.calculate-target-calories');
 });
-
-// Webhooks (jika diperlukan untuk payment gateway)
-Route::post('/webhooks/payment', [App\Http\Controllers\WebhookController::class, 'payment'])->name('webhooks.payment');
 
 // Route untuk halaman diet dan rekomendasi
 Route::middleware(['auth'])->group(function () {

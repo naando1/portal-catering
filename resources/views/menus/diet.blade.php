@@ -98,7 +98,7 @@
                                                 </div>
                                                 <div class="col-4 text-center">
                                                     <small class="d-block text-muted">Karbo</small>
-                                                    <span>{{ $menu->carbs }}g</span>
+                                                    <span>{{ $menu->carbohydrates }}g</span>
                                                 </div>
                                                 <div class="col-4 text-center">
                                                     <small class="d-block text-muted">Lemak</small>

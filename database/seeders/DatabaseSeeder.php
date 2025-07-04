@@ -14,7 +14,10 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             AdminSeeder::class,
+            CategorySeeder::class,
             DietTagSeeder::class,
+            CateringPartnerSeeder::class,
+            DietMenuSeeder::class,
             SampleHealthProfileSeeder::class,
             SampleMenuSeeder::class,
         ]);

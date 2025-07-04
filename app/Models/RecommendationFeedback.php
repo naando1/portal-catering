@@ -20,6 +20,8 @@ class RecommendationFeedback extends Model
         'is_relevant' => 'boolean',
     ];
 
+    protected $table = 'recommendation_feedbacks';
+
     public function user()
     {
         return $this->belongsTo(User::class);

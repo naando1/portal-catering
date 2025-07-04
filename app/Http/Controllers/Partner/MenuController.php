@@ -9,9 +9,12 @@ use App\Models\Menu;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class MenuController extends Controller
 {
+    use AuthorizesRequests;
+
     /**
      * Menampilkan daftar menu
      */
@@ -292,8 +295,6 @@ class MenuController extends Controller
             abort(403);
         }
         
-        $this->authorize('update', $menu);
-        
         $dietTags = DietTag::all();
         $menuDietTags = $menu->dietTags->pluck('id')->toArray();
         
@@ -310,8 +311,6 @@ class MenuController extends Controller
         if ($menu->catering_partner_id !== $partner->id) {
             abort(403);
         }
-        
-        $this->authorize('update', $menu);
         
         // Validasi input
         $request->validate([

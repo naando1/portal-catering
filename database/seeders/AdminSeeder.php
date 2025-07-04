@@ -18,11 +18,14 @@ class AdminSeeder extends Seeder
             $adminRole = Role::create(['name' => 'admin']);
         }
         
-        User::create([
-            'name' => 'Administrator',
-            'email' => 'admin@portal.com',
-            'password' => Hash::make('admin123'),
-            'role_id' => $adminRole->id
-        ]);
+        // Cek apakah admin sudah ada
+        if (!User::where('email', 'admin@portal.com')->exists()) {
+            User::create([
+                'name' => 'Administrator',
+                'email' => 'admin@portal.com',
+                'password' => Hash::make('admin123'),
+                'role_id' => $adminRole->id
+            ]);
+        }
     }
 }
