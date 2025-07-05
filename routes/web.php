@@ -4,8 +4,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MenuController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Customer\ProfileController as CustomerProfileController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
 use App\Http\Controllers\Partner\DashboardController as PartnerDashboardController;
@@ -124,18 +122,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Settings Management
     Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');
     Route::post('/settings', [AdminSettingController::class, 'update'])->name('settings.update');
-});
-
-// API Routes untuk AJAX calls
-Route::middleware('auth')->prefix('api')->name('api.')->group(function () {
-    // Recommendation API
-    Route::get('/recommendations/personal', [App\Http\Controllers\Api\RecommendationController::class, 'personal'])->name('recommendations.personal');
-    Route::post('/recommendations/feedback', [App\Http\Controllers\Api\RecommendationController::class, 'feedback'])->name('recommendations.feedback');
-    
-    // Nutrition Calculator API
-    Route::post('/nutrition/calculate-bmr', [App\Http\Controllers\Api\NutritionController::class, 'calculateBMR'])->name('nutrition.calculate-bmr');
-    Route::post('/nutrition/calculate-tdee', [App\Http\Controllers\Api\NutritionController::class, 'calculateTDEE'])->name('nutrition.calculate-tdee');
-    Route::post('/nutrition/calculate-target-calories', [App\Http\Controllers\Api\NutritionController::class, 'calculateTargetCalories'])->name('nutrition.calculate-target-calories');
 });
 
 // Route untuk halaman diet dan rekomendasi

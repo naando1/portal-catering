@@ -6,7 +6,6 @@ use App\Models\Menu;
 use App\Models\User;
 use App\Models\UserBodyMetrics;
 use App\Models\RecommendationFeedback;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 class DietRecommendationService
